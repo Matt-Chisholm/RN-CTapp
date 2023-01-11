@@ -1,12 +1,12 @@
 import { View, Text, StyleSheet, TextInput, Button } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { API_KEY } from "@env";
 import axios from "axios";
 
 export default function Search() {
   const [term, setTerm] = useState("");
+  const [search, setSearch] = useState(false);
   const [results, setResults] = useState([]);
-  console.log(term);
 
   const options = {
     method: "GET",
@@ -18,11 +18,22 @@ export default function Search() {
     },
   };
 
-  const search = async () => {
-    const response = await axios.request(options);
-    setResults(response.data.drinks[0]);
-    console.log(results);
-  };
+  const makeRequest = useCallback(async () => {
+    try {
+      const response = await axios.request(options);
+      console.log(response.data.drinks[0]);
+      setResults(response.data.drinks[0]);
+    } catch (error) {
+      console.log(error);
+    }
+  }, [options]);
+
+  useEffect(() => {
+    if (search) {
+      makeRequest();
+      setSearch(false);
+    }
+  }, [search, term, makeRequest]);
 
   return (
     <View>
@@ -34,7 +45,7 @@ export default function Search() {
         value={term}
         onChangeText={(newTerm) => setTerm(newTerm)}
       />
-      <Button title='Search' onPress={search} />
+      <Button title='Search' onPress={() => setSearch(true)} />
     </View>
   );
 }
